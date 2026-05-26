@@ -59,7 +59,7 @@ export default function Layout({ children }) {
             <Scissors size={16} color="#1E1E3F" />
           </div>
           <div>
-            <div className="logo-title" style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>Barber POS</div>
+            <div className="logo-title" style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>Black Man Barber POS</div>
             <div className="logo-subtitle" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px' }}>نظام الإدارة</div>
           </div>
         </div>

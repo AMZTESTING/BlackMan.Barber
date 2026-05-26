@@ -62,7 +62,7 @@ export default function Login() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '4px' }}>
             <Zap size={22} color="#C9A84C" />
-            <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#1E1E3F' }}>Barber POS</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#1E1E3F' }}>Black Man Barber POS</h1>
           </div>
           <p style={{ color: '#8B8B8B', fontSize: '16px', marginTop: '4px' }}>نظام إدارة صالون الحلاقة</p>
         </div>
