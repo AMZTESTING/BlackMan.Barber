@@ -53,14 +53,14 @@ export default function Layout({ children }) {
   const sidebarContent = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* لوقو */}
-      <div style={{ padding: '14px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+      <div className="sidebar-header" style={{ padding: '14px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', backgroundColor: '#C9A84C', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="logo-icon" style={{ width: '32px', height: '32px', backgroundColor: '#C9A84C', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Scissors size={16} color="#1E1E3F" />
           </div>
           <div>
-            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>Barber POS</div>
-            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px' }}>نظام الإدارة</div>
+            <div className="logo-title" style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>Barber POS</div>
+            <div className="logo-subtitle" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px' }}>نظام الإدارة</div>
           </div>
         </div>
         {/* زر إغلاق للجوال */}
@@ -69,49 +69,47 @@ export default function Layout({ children }) {
         </button>
       </div>
 
-      {/* القائمة - بدون overflow auto عشان ما يصير سكرول */}
-      <nav style={{ padding: '8px', flexShrink: 0 }}>
+      {/* القائمة + المستخدم مع بعض */}
+      <nav style={{ flex: 1, padding: '8px', overflow: 'auto' }}>
         {menuGroups.map((group, gi) => (
-          <div key={gi} style={{ marginBottom: '10px' }}>
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '3px', padding: '0 8px' }}>{group.title}</div>
+          <div key={gi} className="menu-group" style={{ marginBottom: '12px' }}>
+            <div className="menu-group-title" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '3px', padding: '0 8px' }}>{group.title}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
               {group.items.map((item) => {
                 const Icon = item.icon
                 const isActive = location.pathname === item.to
                 return (
                   <Link key={item.to} to={item.to} onClick={closeSidebar}
+                    className="menu-link"
                     style={{
-                      display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px',
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 10px',
                       borderRadius: '10px', textDecoration: 'none',
                       color: isActive ? '#1E1E3F' : 'rgba(255,255,255,0.65)',
                       backgroundColor: isActive ? '#C9A84C' : 'transparent',
                       fontWeight: isActive ? '600' : '400', fontSize: '12px', transition: 'all 0.2s'
                     }}>
-                    <Icon size={16} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.7 }} />
+                    <Icon size={16} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.7 }} className="menu-icon" />
                     <span style={{ flex: 1 }}>{item.label}</span>
-                    {isActive && <ChevronLeft size={12} />}
+                    {isActive && <ChevronLeft size={12} className="menu-chevron" />}
                   </Link>
                 )
               })}
             </div>
           </div>
         ))}
-      </nav>
 
-      {/* المسافة اللي تدفع المستخدم للأسفل */}
-      <div style={{ flex: 1 }}></div>
-
-      {/* المستخدم - في الأسفل */}
-      <div style={{ padding: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
-          <div style={{ width: '30px', height: '30px', background: 'linear-gradient(135deg, #C9A84C, #E0B050)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E1E3F', fontWeight: 'bold', fontSize: '12px' }}>{user?.email?.charAt(0).toUpperCase() || 'م'}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: 'white', fontSize: '11px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email?.split('@')[0] || 'مدير'}</div>
-            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px' }}>المدير</div>
+        {/* المستخدم - داخل nav */}
+        <div className="user-section" style={{ padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '4px' }}>
+          <div className="user-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+            <div className="user-avatar" style={{ width: '30px', height: '30px', background: 'linear-gradient(135deg, #C9A84C, #E0B050)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E1E3F', fontWeight: 'bold', fontSize: '12px' }}>{user?.email?.charAt(0).toUpperCase() || 'م'}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="user-name" style={{ color: 'white', fontSize: '11px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email?.split('@')[0] || 'مدير'}</div>
+              <div className="user-role" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px' }}>المدير</div>
+            </div>
+            <button onClick={signOut} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '4px' }}><LogOut size={14} className="logout-icon" /></button>
           </div>
-          <button onClick={signOut} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '4px' }}><LogOut size={14} /></button>
         </div>
-      </div>
+      </nav>
     </div>
   )
 
@@ -126,7 +124,7 @@ export default function Layout({ children }) {
       {sidebarOpen && (
         <div className="sidebar-mobile-overlay" onClick={closeSidebar} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999, display: 'none' }}></div>
       )}
-      <div className="sidebar-mobile" style={{ position: 'fixed', top: 0, right: 0, width: '260px', height: '100vh', backgroundColor: '#1E1E3F', zIndex: 1000, display: 'none', transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.3s' }}>
+      <div className="sidebar-mobile" style={{ position: 'fixed', top: 0, right: 0, width: '300px', height: '100vh', backgroundColor: '#1E1E3F', zIndex: 1000, display: 'none', transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.3s', overflowY: 'auto' }}>
         {sidebarContent}
       </div>
 
@@ -139,7 +137,7 @@ export default function Layout({ children }) {
         {children}
       </div>
 
-      {/* CSS للتجاوب */}
+      {/* CSS للتجاوب - الجوال فقط */}
       <style>{`
         @media (max-width: 768px) {
           .sidebar-desktop { display: none !important; }
@@ -147,6 +145,91 @@ export default function Layout({ children }) {
           .sidebar-mobile-overlay { display: block !important; }
           .hamburger-btn { display: flex !important; }
           .close-sidebar-btn { display: flex !important; }
+          
+          /* ========== تكبير الهيدر ========== */
+          .sidebar-mobile .sidebar-header {
+            padding: 20px 16px !important;
+          }
+          
+          .sidebar-mobile .logo-icon {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 12px !important;
+          }
+          
+          .sidebar-mobile .logo-icon svg {
+            width: 22px !important;
+            height: 22px !important;
+          }
+          
+          .sidebar-mobile .logo-title {
+            font-size: 18px !important;
+          }
+          
+          .sidebar-mobile .logo-subtitle {
+            font-size: 11px !important;
+          }
+          
+          /* ========== تكبير القائمة ========== */
+          .sidebar-mobile .menu-group {
+            margin-bottom: 20px !important;
+          }
+          
+          .sidebar-mobile .menu-group-title {
+            font-size: 12px !important;
+            letter-spacing: 3px !important;
+            margin-bottom: 8px !important;
+            padding: 0 10px !important;
+          }
+          
+          .sidebar-mobile .menu-link {
+            font-size: 16px !important;
+            padding: 14px 16px !important;
+            gap: 14px !important;
+            border-radius: 14px !important;
+          }
+          
+          .sidebar-mobile .menu-icon {
+            width: 24px !important;
+            height: 24px !important;
+          }
+          
+          .sidebar-mobile .menu-chevron {
+            width: 18px !important;
+            height: 18px !important;
+          }
+          
+          /* ========== تكبير قسم المستخدم ========== */
+          .sidebar-mobile .user-section {
+            padding: 16px 0 !important;
+            margin-top: 8px !important;
+          }
+          
+          .sidebar-mobile .user-card {
+            padding: 14px !important;
+            gap: 12px !important;
+            border-radius: 14px !important;
+          }
+          
+          .sidebar-mobile .user-avatar {
+            width: 44px !important;
+            height: 44px !important;
+            font-size: 18px !important;
+            border-radius: 12px !important;
+          }
+          
+          .sidebar-mobile .user-name {
+            font-size: 15px !important;
+          }
+          
+          .sidebar-mobile .user-role {
+            font-size: 12px !important;
+          }
+          
+          .sidebar-mobile .logout-icon {
+            width: 20px !important;
+            height: 20px !important;
+          }
         }
       `}</style>
     </div>
