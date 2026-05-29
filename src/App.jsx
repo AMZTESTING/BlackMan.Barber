@@ -14,8 +14,8 @@ import Appointments from './pages/Appointments'
 import Inventory from './pages/Inventory'
 import Settings from './pages/Settings'
 
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth()
+function ProtectedRoute({ children, permission }) {
+  const { user, loading, hasPermission, isAdmin } = useAuth()
 
   if (loading) {
     return (
@@ -26,6 +26,19 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) return <Navigate to="/login" />
+  
+  // ✅ التحقق من الصلاحية
+  if (permission && !hasPermission(permission)) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#F5F0EB', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ fontSize: '48px' }}>🔒</div>
+        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1E1E3F' }}>غير مصرح لك</div>
+        <div style={{ color: '#8B8B8B', fontSize: '14px' }}>ليس لديك صلاحية للوصول لهذه الصفحة</div>
+        <a href="/" style={{ color: '#C9A84C', textDecoration: 'none', fontWeight: '600' }}>العودة للرئيسية</a>
+      </div>
+    )
+  }
+  
   return children
 }
 
@@ -40,17 +53,16 @@ function AppRoutes() {
           <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/new-order" element={<NewOrder />} />
-              <Route path="/appointments" element={<Appointments />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/barbers" element={<Barbers />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/users" element={<UsersPage />} />
-              <Route path="/expenses" element={<Expenses />} />
-              <Route path="/settings" element={<Settings />} />
-            
+              <Route path="/new-order" element={<ProtectedRoute permission="new-order"><NewOrder /></ProtectedRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute permission="appointments"><Appointments /></ProtectedRoute>} />
+              <Route path="/orders" element={<ProtectedRoute permission="orders"><Orders /></ProtectedRoute>} />
+              <Route path="/services" element={<ProtectedRoute permission="services"><Services /></ProtectedRoute>} />
+              <Route path="/customers" element={<ProtectedRoute permission="customers"><Customers /></ProtectedRoute>} />
+              <Route path="/barbers" element={<ProtectedRoute permission="barbers"><Barbers /></ProtectedRoute>} />
+              <Route path="/inventory" element={<ProtectedRoute permission="inventory"><Inventory /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute permission="users"><UsersPage /></ProtectedRoute>} />
+              <Route path="/expenses" element={<ProtectedRoute permission="expenses"><Expenses /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute permission="settings"><Settings /></ProtectedRoute>} />
             </Routes>
           </Layout>
         </ProtectedRoute>

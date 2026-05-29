@@ -69,27 +69,22 @@ export default function PrintableInvoice({ order }) {
         </div>
       </div>
 
-      {/* خط أسود سميك */}
       <div style={{ borderTop: '2px solid #000', margin: '3mm 0' }}></div>
 
-      {/* ========== رقم الفاتورة ========== */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3mm', fontSize: '13px' }}>
         <span style={{ fontWeight: 'bold', width: '30%', textAlign: 'right' }}>فاتورة</span>
         <span style={{ fontWeight: 'bold', width: '40%', textAlign: 'center', fontSize: '15px', color: '#000' }}>#{order.invoice_number || order.id}</span>
         <span style={{ fontWeight: 'bold', width: '30%', textAlign: 'left' }}>Invoice</span>
       </div>
 
-      {/* ========== التاريخ والوقت ========== */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3mm', fontSize: '12px', color: '#000' }}>
         <span style={{ fontWeight: 'bold', width: '30%', textAlign: 'right' }}>الوقت والتاريخ</span>
         <span style={{ fontWeight: 'bold', width: '40%', textAlign: 'center', fontSize: '12px' }}>{dateEn} | {timeStr}</span>
         <span style={{ fontWeight: 'bold', width: '30%', textAlign: 'left' }}>Date & Time</span>
       </div>
 
-      {/* خط متقطع */}
       <div style={{ borderTop: '1px dashed #666', margin: '3mm 0' }}></div>
 
-      {/* ========== معلومات العميل - كارد ========== */}
       <div style={{ 
         backgroundColor: '#F5F5F5', 
         borderRadius: '3mm', 
@@ -118,32 +113,35 @@ export default function PrintableInvoice({ order }) {
         </div>
       </div>
 
-      {/* خط أسود سميك */}
       <div style={{ borderTop: '2px solid #000', margin: '3mm 0' }}></div>
 
-      {/* ========== جدول الخدمات ========== */}
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '3mm' }}>
         <thead>
           <tr style={{ borderBottom: '2px solid #000' }}>
-            <th style={{ textAlign: 'center', padding: '2mm 2mm', fontSize: '12px', fontWeight: 'bold', width: '50%' }}>الخدمة / Service</th>
-            <th style={{ textAlign: 'center', padding: '2mm 2mm', fontSize: '12px', fontWeight: 'bold', width: '25%' }}>السعر / Price</th>
-            <th style={{ textAlign: 'center', padding: '2mm 2mm', fontSize: '12px', fontWeight: 'bold', width: '25%' }}>العدد / Qty</th>
+            <th style={{ textAlign: 'center', padding: '3mm 2mm', fontSize: '14px', fontWeight: '900', width: '50%' }}>الخدمة / Service</th>
+            <th style={{ textAlign: 'center', padding: '3mm 2mm', fontSize: '14px', fontWeight: '900', width: '25%' }}>السعر / Price</th>
+            <th style={{ textAlign: 'center', padding: '3mm 2mm', fontSize: '14px', fontWeight: '900', width: '25%' }}>العدد / Qty</th>
           </tr>
         </thead>
         <tbody>
           {services.length > 0 ? services.map((item, i) => (
-            <tr key={i} style={{ borderBottom: '1px solid #BBB' }}>
-              <td style={{ textAlign: 'center', padding: '2mm 2mm', fontSize: '12px' }}>{item.name}</td>
-              <td style={{ textAlign: 'center', padding: '2mm 2mm', fontSize: '12px' }}>{formatPrice(item.price)} ر.ع</td>
-              <td style={{ textAlign: 'center', padding: '2mm 2mm', fontSize: '12px' }}>{item.quantity || 1}</td>
+            <tr key={i} style={{ borderBottom: '1px solid #999' }}>
+              <td style={{ textAlign: 'center', padding: '3mm 2mm', fontSize: '14px', fontWeight: 'bold' }}>
+                {item.isBundle ? `📦 ${item.name}` : item.name}
+              </td>
+              <td style={{ textAlign: 'center', padding: '3mm 2mm', fontSize: '14px', fontWeight: 'bold' }}>
+                {formatPrice(item.price)} ر.ع
+              </td>
+              <td style={{ textAlign: 'center', padding: '3mm 2mm', fontSize: '14px', fontWeight: 'bold' }}>
+                {item.quantity || 1}
+              </td>
             </tr>
           )) : (
-            <tr><td colSpan={3} style={{ textAlign: 'center', padding: '4mm', fontSize: '12px' }}>لا توجد خدمات</td></tr>
+            <tr><td colSpan={3} style={{ textAlign: 'center', padding: '5mm', fontSize: '14px' }}>لا توجد خدمات</td></tr>
           )}
         </tbody>
       </table>
 
-      {/* ========== المجاميع ========== */}
       <div style={{ borderTop: '2px solid #000', paddingTop: '3mm', marginBottom: '3mm' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2mm', fontSize: '12px' }}>
           <span style={{ fontWeight: 'bold', width: '30%', textAlign: 'right' }}>المجموع</span>
@@ -168,7 +166,6 @@ export default function PrintableInvoice({ order }) {
         )}
       </div>
 
-      {/* ========== الإجمالي - سطر واحد ========== */}
       <div style={{
         backgroundColor: '#000000',
         color: '#FFFFFF',
@@ -186,17 +183,14 @@ export default function PrintableInvoice({ order }) {
         <span style={{ fontSize: '16px' }}>{formatPrice(finalTotal)} ر.ع</span>
       </div>
 
-      {/* ========== طريقة الدفع ========== */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3mm', fontSize: '12px' }}>
         <span style={{ fontWeight: 'bold', width: '35%', textAlign: 'right' }}>طريقة الدفع</span>
         <span style={{ fontWeight: 'bold', width: '30%', textAlign: 'center', fontSize: '13px' }}>{order.payment_method}</span>
         <span style={{ fontWeight: 'bold', width: '35%', textAlign: 'left' }}>Payment Method</span>
       </div>
 
-      {/* خط متقطع */}
       <div style={{ borderTop: '1px dashed #666', margin: '3mm 0' }}></div>
 
-      {/* ========== الفوتر ========== */}
       <div style={{ textAlign: 'center', fontSize: '11px', color: '#000', fontFamily: "'Arial', sans-serif" }}>
         <div style={{ marginBottom: '2mm', fontWeight: 'bold', fontSize: '13px' }}>
           {settings.invoice_footer || 'شكراً لزيارتكم'}

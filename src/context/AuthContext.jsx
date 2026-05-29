@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [rolePermissions, setRolePermissions] = useState([]) // ✅ جديد
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -18,26 +19,75 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) fetchProfile(session.user.id)
-      else { setProfile(null); setLoading(false) }
+      else { setProfile(null); setRolePermissions([]); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(userId) {
-    let { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
-    
-    if (!data) {
-      const { data: newProfile } = await supabase
-        .from('profiles')
-        .insert({ id: userId, full_name: 'مستخدم', role: 'barber', email: '', user_password: '' })
-        .select()
-        .single()
-      data = newProfile
+  // ✅ تحميل صلاحيات الدور من قاعدة البيانات
+  async function loadRolePermissions(roleName) {
+    const { data } = await supabase.from('roles').select('permissions').eq('name', roleName).single()
+    if (data?.permissions) {
+      setRolePermissions(data.permissions)
+    } else if (roleName === 'admin') {
+      // admin له كل الصلاحيات
+      setRolePermissions(['dashboard', 'new-order', 'appointments', 'orders', 'services', 'customers', 'barbers', 'inventory', 'users', 'expenses', 'settings'])
+    } else {
+      setRolePermissions([])
     }
-    
-    setProfile(data)
-    setLoading(false)
+  }
+
+  async function fetchProfile(userId) {
+    try {
+      let { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+      
+      if (!data) {
+        const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+        const isFirstUser = count === 0
+        
+        const { data: newProfile } = await supabase
+          .from('profiles')
+          .insert({ 
+            id: userId, 
+            full_name: user?.email?.split('@')[0] || 'مستخدم', 
+            role: isFirstUser ? 'admin' : 'barber', 
+            email: user?.email || '', 
+            user_password: '', 
+            phone: '',
+            is_active: true 
+          })
+          .select()
+          .single()
+        data = newProfile
+      }
+      
+      console.log('Profile loaded:', data?.role)
+      setProfile(data)
+      
+      // ✅ تحميل صلاحيات الدور
+      if (data?.role) {
+        await loadRolePermissions(data.role)
+      }
+    } catch (err) {
+      console.error('Fetch profile error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ✅ التحقق من الصلاحية
+  function hasPermission(page) {
+    if (profile?.role === 'admin') return true
+    return rolePermissions.includes(page)
+  }
+
+  // ✅ التحقق من الصلاحية مع الأدوار المسموحة (للتوافق مع القديم)
+  function canAccess(allowedRoles) {
+    if (!profile) return false
+    if (profile.role === 'admin') return true
+    if (allowedRoles && allowedRoles.includes(profile.role)) return true
+    return false
   }
 
   async function signIn(email, password) {
@@ -48,9 +98,9 @@ export function AuthProvider({ children }) {
   async function signOut() {
     await supabase.auth.signOut()
     setProfile(null)
+    setRolePermissions([])
   }
 
-  // إنشاء مستخدم جديد (للمدير فقط)
   async function createUserByAdmin(email, password, fullName, role) {
     try {
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -77,7 +127,8 @@ export function AuthProvider({ children }) {
           role: role, 
           is_active: true,
           email: email,
-          user_password: password
+          user_password: password,
+          phone: ''
         })
 
       if (profileError) {
@@ -92,7 +143,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // جلب كل المستخدمين
   async function getUsers() {
     const { data, error } = await supabase
       .from('profiles')
@@ -101,7 +151,6 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
-  // حذف مستخدم
   async function deleteUserByAdmin(userId) {
     try {
       await supabase.from('profiles').delete().eq('id', userId)
@@ -126,7 +175,10 @@ export function AuthProvider({ children }) {
     createUserByAdmin, 
     getUsers, 
     deleteUserByAdmin, 
-    isAdmin: profile?.role === 'admin'
+    isAdmin: profile?.role === 'admin',
+    rolePermissions,     // ✅ صلاحيات الدور الحالي
+    hasPermission,       // ✅ دالة التحقق من الصلاحية
+    canAccess            // ✅ دالة التحقق من الأدوار
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
