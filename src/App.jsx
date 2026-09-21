@@ -26,8 +26,7 @@ function ProtectedRoute({ children, permission }) {
   }
 
   if (!user) return <Navigate to="/login" />
-  
-  // ✅ التحقق من الصلاحية
+
   if (permission && !hasPermission(permission)) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#F5F0EB', flexDirection: 'column', gap: '16px' }}>
@@ -38,7 +37,7 @@ function ProtectedRoute({ children, permission }) {
       </div>
     )
   }
-  
+
   return children
 }
 

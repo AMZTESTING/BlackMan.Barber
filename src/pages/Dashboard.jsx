@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -49,6 +50,7 @@ function useIsMobile() {
 }
 
 export default function Dashboard() {
+  const { t, i18n } = useTranslation()
   const isMobile = useIsMobile()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -65,6 +67,8 @@ export default function Dashboard() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [changes, setChanges] = useState({ salesChange: 0, ordersChange: 0, avgChange: 0 })
+
+  const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US'
 
   useEffect(() => {
     loadAllData()
@@ -101,7 +105,7 @@ export default function Dashboard() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i)
       const dayStr = d.toISOString().split('T')[0]
-      weeklyData.push({ day: d.toLocaleDateString('ar-SA', { weekday: 'short' }), sales: weekOrders?.filter(o => o.created_at?.startsWith(dayStr))?.reduce((sum, o) => sum + o.total_amount, 0) || 0 })
+      weeklyData.push({ day: d.toLocaleDateString(locale, { weekday: 'short' }), sales: weekOrders?.filter(o => o.created_at?.startsWith(dayStr))?.reduce((sum, o) => sum + o.total_amount, 0) || 0 })
     }
 
     const currentTotalSales = currentOrders?.reduce((sum, o) => sum + o.total_amount, 0) || 0
@@ -127,8 +131,8 @@ export default function Dashboard() {
     dataList.forEach(app => {
       const appDate = new Date(`${app.appointment_date}T${app.start_time}`)
       const diffMinutes = Math.floor((appDate - now) / 60000)
-      if (diffMinutes <= 30 && diffMinutes > 0) alerts.push({ id: app.id, type: 'warning', message: `حجز بعد ${diffMinutes} دقيقة`, customer: app.customers?.name, service: app.services?.name, time: app.start_time?.substring(0, 5) })
-      if (diffMinutes <= 0 && diffMinutes > -30) alerts.push({ id: app.id, type: 'now', message: 'حجز الآن!', customer: app.customers?.name, service: app.services?.name, time: app.start_time?.substring(0, 5) })
+      if (diffMinutes <= 30 && diffMinutes > 0) alerts.push({ id: app.id, type: 'warning', message: t('appointmentSoon', { minutes: diffMinutes }), customer: app.customers?.name, service: app.services?.name, time: app.start_time?.substring(0, 5) })
+      if (diffMinutes <= 0 && diffMinutes > -30) alerts.push({ id: app.id, type: 'now', message: t('appointmentNow'), customer: app.customers?.name, service: app.services?.name, time: app.start_time?.substring(0, 5) })
     })
     if (alerts.length > 0) setNotifications(alerts)
   }
@@ -137,40 +141,39 @@ export default function Dashboard() {
     const fd = dateFrom || new Date().toISOString().split('T')[0]
     const td = dateTo || new Date().toISOString().split('T')[0]
     supabase.from('orders').select('*, customers(name, phone)').gte('created_at', fd).lte('created_at', td + 'T23:59:59').order('created_at', { ascending: false }).then(({ data }) => {
-      if (!data?.length) return alert('لا توجد بيانات')
-      let csv = 'رقم,التاريخ,العميل,الهاتف,الحلاق,الإجمالي,الدفع\n'
-      data.forEach(o => csv += `"${o.invoice_number || o.id}","${new Date(o.created_at).toLocaleString('ar-SA')}","${o.customers?.name || ''}","${o.customers?.phone || ''}","${o.barber_name || ''}","${o.total_amount}","${o.payment_method}"\n`)
+      if (!data?.length) return alert(t('noData'))
+      let csv = `${t('invoiceNumber')},${t('date')},${t('customer')},${t('phone')},${t('barberName')},${t('total')},${t('paymentMethod')}\n`
+      data.forEach(o => csv += `"${o.invoice_number || o.id}","${new Date(o.created_at).toLocaleString(locale)}","${o.customers?.name || ''}","${o.customers?.phone || ''}","${o.barber_name || ''}","${o.total_amount}","${o.payment_method}"\n`)
       const b = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-      const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'تقرير.csv'; a.click(); URL.revokeObjectURL(u)
+      const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `${t('reports')}.csv`; a.click(); URL.revokeObjectURL(u)
     })
   }
 
   const statCards = [
-    { label: 'المبيعات', value: `${formatPrice(stats.todaySales)} ر.ع`, icon: DollarSign, bg: 'linear-gradient(135deg, #10B981, #059669)', change: changes.salesChange },
-    { label: 'الفواتير', value: stats.todayOrders, icon: ShoppingCart, bg: 'linear-gradient(135deg, #3B82F6, #2563EB)', change: changes.ordersChange },
-    { label: 'العملاء', value: stats.totalCustomers, icon: Users, bg: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', change: null },
-    { label: 'متوسط الفاتورة', value: `${formatPrice(stats.avgOrder)} ر.ع`, icon: TrendingUp, bg: 'linear-gradient(135deg, #F59E0B, #D97706)', change: changes.avgChange },
+    { label: t('sales'), value: `${formatPrice(stats.todaySales)} ${t('currency')}`, icon: DollarSign, bg: 'linear-gradient(135deg, #10B981, #059669)', change: changes.salesChange },
+    { label: t('invoices'), value: stats.todayOrders, icon: ShoppingCart, bg: 'linear-gradient(135deg, #3B82F6, #2563EB)', change: changes.ordersChange },
+    { label: t('customers'), value: stats.totalCustomers, icon: Users, bg: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', change: null },
+    { label: t('avgOrder'), value: `${formatPrice(stats.avgOrder)} ${t('currency')}`, icon: TrendingUp, bg: 'linear-gradient(135deg, #F59E0B, #D97706)', change: changes.avgChange },
   ]
 
   const appointmentCards = [
-    { label: 'إجمالي', value: appointmentStats.total, icon: Calendar, color: '#3B82F6', bg: '#EFF6FF' },
-    { label: 'مؤكد', value: appointmentStats.confirmed, icon: CheckCircle, color: '#10B981', bg: '#D1FAE5' },
-    { label: 'مكتمل', value: appointmentStats.completed, icon: CheckCircle, color: '#8B5CF6', bg: '#EDE9FE' },
-    { label: 'تم الدفع', value: appointmentStats.paid, icon: CreditCard, color: '#2563EB', bg: '#DBEAFE' },
-    { label: 'ملغي', value: appointmentStats.cancelled, icon: XCircle, color: '#EF4444', bg: '#FEE2E2' },
-    { label: 'لم يحضر', value: appointmentStats.noShow, icon: Ban, color: '#F59E0B', bg: '#FEF3C7' },
+    { label: t('total'), value: appointmentStats.total, icon: Calendar, color: '#3B82F6', bg: '#EFF6FF' },
+    { label: t('confirmed'), value: appointmentStats.confirmed, icon: CheckCircle, color: '#10B981', bg: '#D1FAE5' },
+    { label: t('completed'), value: appointmentStats.completed, icon: CheckCircle, color: '#8B5CF6', bg: '#EDE9FE' },
+    { label: t('paid'), value: appointmentStats.paid, icon: CreditCard, color: '#2563EB', bg: '#DBEAFE' },
+    { label: t('cancelled'), value: appointmentStats.cancelled, icon: XCircle, color: '#EF4444', bg: '#FEE2E2' },
+    { label: t('noShow'), value: appointmentStats.noShow, icon: Ban, color: '#F59E0B', bg: '#FEF3C7' },
   ]
 
   const quickLinks = [
-    { to: '/new-order', label: 'نقطة البيع', icon: ShoppingCart, bg: '#1E1E3F', desc: 'فاتورة جديدة' },
-    { to: '/appointments', label: 'الحجوزات', icon: Calendar, bg: '#C9A84C', desc: `${appointmentStats.total} حجز` },
-    { to: '/customers', label: 'العملاء', icon: Users, bg: '#1E1E3F', desc: `${stats.totalCustomers} عميل` },
-    { to: '/services', label: 'الخدمات', icon: Scissors, bg: '#C9A84C', desc: `${stats.totalServices} خدمة` },
-    { to: '/orders', label: 'التقارير', icon: BarChart3, bg: '#1E1E3F', desc: 'المبيعات' },
-    { to: '/barbers', label: 'الحلاقين', icon: User, bg: '#C9A84C', desc: `${stats.totalBarbers} حلاق` },
+    { to: '/new-order', label: t('pos'), icon: ShoppingCart, bg: '#1E1E3F', desc: t('newInvoice') },
+    { to: '/appointments', label: t('appointments'), icon: Calendar, bg: '#C9A84C', desc: `${appointmentStats.total} ${t('appointmentSingular')}` },
+    { to: '/customers', label: t('customers'), icon: Users, bg: '#1E1E3F', desc: `${stats.totalCustomers} ${t('customerSingular')}` },
+    { to: '/services', label: t('services'), icon: Scissors, bg: '#C9A84C', desc: `${stats.totalServices} ${t('serviceSingular')}` },
+    { to: '/orders', label: t('reports'), icon: BarChart3, bg: '#1E1E3F', desc: t('sales') },
+    { to: '/barbers', label: t('barbers'), icon: User, bg: '#C9A84C', desc: `${stats.totalBarbers} ${t('barberSingular')}` },
   ]
 
-  // عدد الأعمدة حسب الجهاز
   const statsCols = isMobile ? 2 : 4
   const appCols = isMobile ? 3 : 6
   const linksCols = isMobile ? 3 : 6
@@ -180,8 +183,8 @@ export default function Dashboard() {
       {/* رأس الصفحة */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? '24px' : '30px', fontWeight: 'bold', color: '#1E1E3F', marginBottom: '4px' }}>لوحة التحكم</h1>
-          <p style={{ color: '#8B8B8B', fontSize: isMobile ? '14px' : '17px' }}>{new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <h1 style={{ fontSize: isMobile ? '24px' : '30px', fontWeight: 'bold', color: '#1E1E3F', marginBottom: '4px' }}>{t('dashboard')}</h1>
+          <p style={{ color: '#8B8B8B', fontSize: isMobile ? '14px' : '17px' }}>{new Date().toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'white', padding: isMobile ? '6px 8px' : '8px 14px', borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
@@ -200,7 +203,7 @@ export default function Dashboard() {
             </button>
             {showNotifications && notifications.length > 0 && (
               <div style={{ position: 'absolute', top: '50px', left: '0', width: isMobile ? '300px' : '360px', backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', zIndex: 100, overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid #F5F0EB' }}><h3 style={{ fontWeight: 'bold', color: '#1E1E3F', fontSize: '15px', margin: 0 }}>تنبيهات ({notifications.length})</h3></div>
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid #F5F0EB' }}><h3 style={{ fontWeight: 'bold', color: '#1E1E3F', fontSize: '15px', margin: 0 }}>{t('notifications')} ({notifications.length})</h3></div>
                 <div style={{ maxHeight: '300px', overflow: 'auto' }}>
                   {notifications.map(n => (
                     <Link key={n.id} to="/appointments" onClick={() => setShowNotifications(false)} style={{ display: 'block', padding: '14px 20px', textDecoration: 'none', borderBottom: '1px solid #F5F0EB', color: '#1E1E3F' }}>
@@ -256,8 +259,8 @@ export default function Dashboard() {
         {/* الحجوزات القادمة */}
         <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: isMobile ? '18px' : '28px', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '14px' : '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Calendar size={isMobile ? 18 : 22} color="#C9A84C" /><h2 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: 'bold', color: '#1E1E3F', margin: 0 }}>الحجوزات القادمة</h2></div>
-            <Link to="/appointments" style={{ fontSize: '13px', color: '#C9A84C', fontWeight: '600', textDecoration: 'none' }}>عرض الكل →</Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Calendar size={isMobile ? 18 : 22} color="#C9A84C" /><h2 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: 'bold', color: '#1E1E3F', margin: 0 }}>{t('upcomingAppointments')}</h2></div>
+            <Link to="/appointments" style={{ fontSize: '13px', color: '#C9A84C', fontWeight: '600', textDecoration: 'none' }}>{t('viewAll')}</Link>
           </div>
           {upcomingAppointments.length > 0 ? upcomingAppointments.map(app => {
             const diff = Math.floor((new Date(`${app.appointment_date}T${app.start_time}`) - new Date()) / 60000)
@@ -268,33 +271,33 @@ export default function Dashboard() {
                   <div style={{ width: isMobile ? '34px' : '44px', height: isMobile ? '34px' : '44px', borderRadius: '12px', backgroundColor: now ? '#FEE2E2' : soon ? '#FEF3C7' : '#F5F0EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Clock size={isMobile ? 16 : 20} color={now ? '#EF4444' : soon ? '#D97706' : '#8B8B8B'} /></div>
                   <div><div style={{ fontWeight: '600', color: '#1E1E3F', fontSize: isMobile ? '12px' : '14px' }}>{app.customers?.name}</div><div style={{ fontSize: isMobile ? '10px' : '12px', color: '#8B8B8B' }}>{app.services?.name} • {app.start_time?.substring(0, 5)}</div></div>
                 </div>
-                <div>{now ? <span style={{ padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FEE2E2', color: '#EF4444', fontSize: '11px', fontWeight: '600' }}>الآن!</span> : soon ? <span style={{ padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FEF3C7', color: '#D97706', fontSize: '11px', fontWeight: '600' }}>بعد {diff} د</span> : <span style={{ fontSize: '12px', color: '#8B8B8B' }}>{new Date(app.appointment_date).toLocaleDateString('ar-SA')}</span>}</div>
+                <div>{now ? <span style={{ padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FEE2E2', color: '#EF4444', fontSize: '11px', fontWeight: '600' }}>{t('now')}</span> : soon ? <span style={{ padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FEF3C7', color: '#D97706', fontSize: '11px', fontWeight: '600' }}>{t('inMinutes', { minutes: diff })}</span> : <span style={{ fontSize: '12px', color: '#8B8B8B' }}>{new Date(app.appointment_date).toLocaleDateString(locale)}</span>}</div>
               </div>
             )
-          }) : <div style={{ textAlign: 'center', padding: '40px', color: '#8B8B8B' }}>لا توجد حجوزات قادمة</div>}
+          }) : <div style={{ textAlign: 'center', padding: '40px', color: '#8B8B8B' }}>{t('noUpcomingAppointments')}</div>}
         </div>
 
         {/* آخر الفواتير */}
         <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: isMobile ? '18px' : '28px', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '14px' : '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FileText size={isMobile ? 18 : 22} color="#C9A84C" /><h2 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: 'bold', color: '#1E1E3F', margin: 0 }}>آخر الفواتير</h2></div>
-            <Link to="/orders" style={{ fontSize: '13px', color: '#C9A84C', fontWeight: '600', textDecoration: 'none' }}>عرض الكل →</Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FileText size={isMobile ? 18 : 22} color="#C9A84C" /><h2 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: 'bold', color: '#1E1E3F', margin: 0 }}>{t('recentInvoices')}</h2></div>
+            <Link to="/orders" style={{ fontSize: '13px', color: '#C9A84C', fontWeight: '600', textDecoration: 'none' }}>{t('viewAll')}</Link>
           </div>
           {stats.recentOrders.length > 0 ? stats.recentOrders.map((o, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '10px' : '14px', backgroundColor: '#FAFAFA', borderRadius: '14px', marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '10px' }}>
                 <div style={{ width: isMobile ? '30px' : '36px', height: isMobile ? '30px' : '36px', borderRadius: '10px', backgroundColor: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DollarSign size={isMobile ? 14 : 16} color="#10B981" /></div>
-                <div><div style={{ fontWeight: '600', color: '#1E1E3F', fontSize: isMobile ? '12px' : '14px' }}>{o.customers?.name || 'عميل'}</div><div style={{ fontSize: isMobile ? '10px' : '11px', color: '#8B8B8B' }}>{new Date(o.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</div></div>
+                <div><div style={{ fontWeight: '600', color: '#1E1E3F', fontSize: isMobile ? '12px' : '14px' }}>{o.customers?.name || t('customer')}</div><div style={{ fontSize: isMobile ? '10px' : '11px', color: '#8B8B8B' }}>{new Date(o.created_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</div></div>
               </div>
-              <span style={{ fontWeight: 'bold', color: '#10B981', fontSize: isMobile ? '12px' : '14px' }}>{formatPrice(o.total_amount)} ر.ع</span>
+              <span style={{ fontWeight: 'bold', color: '#10B981', fontSize: isMobile ? '12px' : '14px' }}>{formatPrice(o.total_amount)} {t('currency')}</span>
             </div>
-          )) : <div style={{ textAlign: 'center', padding: '40px', color: '#8B8B8B' }}>لا توجد فواتير</div>}
+          )) : <div style={{ textAlign: 'center', padding: '40px', color: '#8B8B8B' }}>{t('noInvoices')}</div>}
         </div>
       </div>
 
       {/* المبيعات الأسبوعية */}
       <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: isMobile ? '18px' : '28px', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', marginBottom: isMobile ? '20px' : '28px' }}>
-        <h2 style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 'bold', color: '#1E1E3F', marginBottom: '24px' }}>المبيعات الأسبوعية</h2>
+        <h2 style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 'bold', color: '#1E1E3F', marginBottom: '24px' }}>{t('weeklySales')}</h2>
         {stats.weeklySales.some(d => d.sales > 0) ? (
           <ResponsiveContainer width="100%" height={isMobile ? 200 : 280}>
             <AreaChart data={stats.weeklySales}>
@@ -304,12 +307,12 @@ export default function Dashboard() {
               <Area type="monotone" dataKey="sales" stroke="#C9A84C" strokeWidth={3} fill="url(#colorSales)" />
             </AreaChart>
           </ResponsiveContainer>
-        ) : <div style={{ textAlign: 'center', padding: '60px', color: '#8B8B8B' }}>لا توجد بيانات</div>}
+        ) : <div style={{ textAlign: 'center', padding: '60px', color: '#8B8B8B' }}>{t('noData')}</div>}
       </div>
 
       {/* روابط سريعة */}
       <div>
-        <h2 style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 'bold', color: '#1E1E3F', marginBottom: '16px' }}>روابط سريعة</h2>
+        <h2 style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 'bold', color: '#1E1E3F', marginBottom: '16px' }}>{t('quickLinks')}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${linksCols}, 1fr)`, gap: isMobile ? '8px' : '16px' }}>
           {quickLinks.map((link, i) => {
             const Icon = link.icon

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { 
   LayoutDashboard, ShoppingCart, CalendarDays, Sparkles, Users, Scissors,
@@ -8,39 +9,39 @@ import {
 
 const allMenuGroups = [
   {
-    title: 'الرئيسية',
+    titleKey: 'groupMain',
     items: [
-      { to: '/', label: 'لوحة التحكم', icon: LayoutDashboard, permission: 'dashboard' }
+      { to: '/', labelKey: 'dashboard', icon: LayoutDashboard, permission: 'dashboard' }
     ]
   },
   {
-    title: 'العمليات',
+    titleKey: 'groupOperations',
     items: [
-      { to: '/new-order', label: 'نقطة البيع', icon: ShoppingCart, permission: 'new-order' },
-      { to: '/appointments', label: 'الحجوزات', icon: CalendarDays, permission: 'appointments' },
+      { to: '/new-order', labelKey: 'pos', icon: ShoppingCart, permission: 'new-order' },
+      { to: '/appointments', labelKey: 'appointments', icon: CalendarDays, permission: 'appointments' },
     ]
   },
   {
-    title: 'الإدارة',
+    titleKey: 'groupManagement',
     items: [
-      { to: '/services', label: 'الخدمات', icon: Sparkles, permission: 'services' },
-      { to: '/customers', label: 'العملاء', icon: Users, permission: 'customers' },
-      { to: '/barbers', label: 'الحلاقين', icon: Scissors, permission: 'barbers' },
-      { to: '/inventory', label: 'المخزون', icon: Package, permission: 'inventory' },
+      { to: '/services', labelKey: 'services', icon: Sparkles, permission: 'services' },
+      { to: '/customers', labelKey: 'customers', icon: Users, permission: 'customers' },
+      { to: '/barbers', labelKey: 'barbers', icon: Scissors, permission: 'barbers' },
+      { to: '/inventory', labelKey: 'inventory', icon: Package, permission: 'inventory' },
     ]
   },
   {
-    title: 'المالية',
+    titleKey: 'groupFinance',
     items: [
-      { to: '/orders', label: 'التقارير', icon: ClipboardList, permission: 'orders' },
-      { to: '/expenses', label: 'المصاريف', icon: DollarSign, permission: 'expenses' },
+      { to: '/orders', labelKey: 'reports', icon: ClipboardList, permission: 'orders' },
+      { to: '/expenses', labelKey: 'expenses', icon: DollarSign, permission: 'expenses' },
     ]
   },
   {
-    title: 'النظام',
+    titleKey: 'groupSystem',
     items: [
-      { to: '/users', label: 'المستخدمين', icon: UserCog, permission: 'users' },
-      { to: '/settings', label: 'الإعدادات', icon: Settings, permission: 'settings' },
+      { to: '/users', labelKey: 'users', icon: UserCog, permission: 'users' },
+      { to: '/settings', labelKey: 'settings', icon: Settings, permission: 'settings' },
     ]
   },
 ]
@@ -48,16 +49,29 @@ const allMenuGroups = [
 export default function Layout({ children }) {
   const location = useLocation()
   const { user, signOut, profile, hasPermission } = useAuth()
+  const { i18n, t } = useTranslation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const role = profile?.role || 'barber'
-  
+  const isArabic = i18n.language === 'ar'
+
+  // ✅ تغيير اتجاه الصفحة تلقائياً
+  useEffect(() => {
+    document.documentElement.lang = i18n.language
+    document.documentElement.dir = isArabic ? 'rtl' : 'ltr'
+  }, [i18n.language, isArabic])
+
+  const toggleLang = () => {
+    i18n.changeLanguage(isArabic ? 'en' : 'ar')
+  }
+
+  // ✅ تسميات الأدوار
   const roleLabels = {
-    admin: 'المدير',
-    manager: 'مشرف',
-    cashier: 'كاشير',
-    barber: 'حلاق',
-    receptionist: 'استقبال'
+    admin: t('roleAdmin'),
+    manager: t('roleManager'),
+    cashier: t('roleCashier'),
+    barber: t('roleBarber'),
+    receptionist: t('roleReceptionist')
   }
 
   // ✅ تصفية القائمة حسب الصلاحيات الديناميكية
@@ -76,8 +90,8 @@ export default function Layout({ children }) {
             <Scissors size={16} color="#1E1E3F" />
           </div>
           <div>
-            <div className="logo-title" style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>Black Man Barber POS</div>
-            <div className="logo-subtitle" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px' }}>نظام الإدارة</div>
+            <div className="logo-title" style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>{t('appName')}</div>
+            <div className="logo-subtitle" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px' }}>{t('appSubtitle')}</div>
           </div>
         </div>
         <button onClick={closeSidebar} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'none' }} className="close-sidebar-btn">
@@ -88,7 +102,7 @@ export default function Layout({ children }) {
       <nav style={{ flex: 1, padding: '8px', overflow: 'auto' }}>
         {menuGroups.map((group, gi) => (
           <div key={gi} className="menu-group" style={{ marginBottom: '12px' }}>
-            <div className="menu-group-title" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '3px', padding: '0 8px' }}>{group.title}</div>
+            <div className="menu-group-title" style={{ color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '3px', padding: '0 8px' }}>{t(group.titleKey)}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
               {group.items.map((item) => {
                 const Icon = item.icon
@@ -104,7 +118,7 @@ export default function Layout({ children }) {
                       fontWeight: isActive ? '600' : '400', fontSize: '12px', transition: 'all 0.2s'
                     }}>
                     <Icon size={16} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.7 }} className="menu-icon" />
-                    <span style={{ flex: 1 }}>{item.label}</span>
+                    <span style={{ flex: 1 }}>{t(item.labelKey)}</span>
                     {isActive && <ChevronLeft size={12} className="menu-chevron" />}
                   </Link>
                 )
@@ -113,12 +127,59 @@ export default function Layout({ children }) {
           </div>
         ))}
 
+        {/* زر تغيير اللغة */}
+<button
+  onClick={toggleLang}
+  className="lang-btn"
+  style={{
+    width: '100%',
+    padding: '10px 12px',
+    marginTop: '8px',
+    marginBottom: '8px',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    color: 'rgba(255, 255, 255, 0.75)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    transition: 'all 0.2s',
+    letterSpacing: '0.3px'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = 'rgba(201, 168, 76, 0.15)'
+    e.currentTarget.style.color = '#C9A84C'
+    e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.3)'
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
+    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)'
+    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+  }}
+>
+  <span>{isArabic ? 'Language' : 'اللغة'}</span>
+  <span style={{
+    fontSize: '11px',
+    fontWeight: '600',
+    color: '#C9A84C',
+    backgroundColor: 'rgba(201, 168, 76, 0.15)',
+    padding: '3px 8px',
+    borderRadius: '6px'
+  }}>
+    {isArabic ? 'EN' : 'ع'}
+  </span>
+</button>
+
         <div className="user-section" style={{ padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '4px' }}>
           <div className="user-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
             <div className="user-avatar" style={{ width: '30px', height: '30px', background: 'linear-gradient(135deg, #C9A84C, #E0B050)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E1E3F', fontWeight: 'bold', fontSize: '12px' }}>{user?.email?.charAt(0).toUpperCase() || 'م'}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="user-name" style={{ color: 'white', fontSize: '11px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.full_name || user?.email?.split('@')[0] || 'مستخدم'}</div>
-              <div className="user-role" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px' }}>{roleLabels[role] || 'مستخدم'}</div>
+              <div className="user-name" style={{ color: 'white', fontSize: '11px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.full_name || user?.email?.split('@')[0] || t('user')}</div>
+              <div className="user-role" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px' }}>{roleLabels[role] || t('user')}</div>
             </div>
             <button onClick={signOut} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: '4px' }}><LogOut size={14} className="logout-icon" /></button>
           </div>
@@ -171,6 +232,7 @@ export default function Layout({ children }) {
           .sidebar-mobile .user-name { font-size: 15px !important; }
           .sidebar-mobile .user-role { font-size: 12px !important; }
           .sidebar-mobile .logout-icon { width: 20px !important; height: 20px !important; }
+          .sidebar-mobile .lang-btn { font-size: 16px !important; padding: 14px !important; margin-bottom: 16px !important; }
         }
       `}</style>
     </div>

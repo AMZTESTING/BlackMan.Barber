@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { Scissors, Mail, Lock, Eye, EyeOff, Zap } from 'lucide-react'
 
 export default function Login() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -16,15 +18,15 @@ export default function Login() {
     setLoading(true)
 
     const { error } = await signIn(email, password)
-    
+
     if (error) {
       if (error.message.includes('Invalid login')) {
-        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
+        setError(t('invalidCredentials'))
       } else {
-        setError('حدث خطأ: ' + error.message)
+        setError(t('errorOccurred') + ': ' + error.message)
       }
     }
-    
+
     setLoading(false)
   }
 
@@ -45,7 +47,6 @@ export default function Login() {
         maxWidth: '450px',
         boxShadow: '0 25px 60px rgba(0,0,0,0.3)'
       }}>
-        {/* لوقو */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{
             width: '80px',
@@ -62,12 +63,11 @@ export default function Login() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '4px' }}>
             <Zap size={22} color="#C9A84C" />
-            <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#1E1E3F' }}>Black Man Barber POS</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#1E1E3F' }}>{t('appName')}</h1>
           </div>
-          <p style={{ color: '#8B8B8B', fontSize: '16px', marginTop: '4px' }}>نظام إدارة صالون الحلاقة</p>
+          <p style={{ color: '#8B8B8B', fontSize: '16px', marginTop: '4px' }}>{t('loginSubtitleFull')}</p>
         </div>
 
-        {/* رسالة خطأ */}
         {error && (
           <div style={{
             backgroundColor: '#FEF2F2',
@@ -84,11 +84,10 @@ export default function Login() {
           </div>
         )}
 
-        {/* فورم */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '22px' }}>
             <label style={{ display: 'block', fontWeight: '700', color: '#1E1E3F', marginBottom: '10px', fontSize: '14px' }}>
-              البريد الإلكتروني
+              {t('email')}
             </label>
             <div style={{ position: 'relative' }}>
               <Mail size={20} style={{ position: 'absolute', right: '18px', top: '50%', transform: 'translateY(-50%)', color: '#8B8B8B' }} />
@@ -118,7 +117,7 @@ export default function Login() {
 
           <div style={{ marginBottom: '30px' }}>
             <label style={{ display: 'block', fontWeight: '700', color: '#1E1E3F', marginBottom: '10px', fontSize: '14px' }}>
-              كلمة المرور
+              {t('password')}
             </label>
             <div style={{ position: 'relative' }}>
               <Lock size={20} style={{ position: 'absolute', right: '18px', top: '50%', transform: 'translateY(-50%)', color: '#8B8B8B' }} />
@@ -172,18 +171,12 @@ export default function Login() {
               boxShadow: '0 8px 25px rgba(30,30,63,0.3)'
             }}
           >
-            {loading ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                جاري تسجيل الدخول...
-              </span>
-            ) : (
-              'تسجيل الدخول'
-            )}
+            {loading ? t('loggingIn') : t('loginButton')}
           </button>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '28px', color: '#8B8B8B', fontSize: '13px' }}>
-          نسيت كلمة المرور؟ تواصل مع المسؤول
+          {t('forgotPasswordContactAdmin')}
         </p>
       </div>
     </div>
